@@ -1,100 +1,60 @@
-# Speckle Automate function template - Python
+[![build and deploy Speckle functions](https://github.com/specklesystems/speckle_automate-basic_data_sanitiser_demo/actions/workflows/main.yml/badge.svg)](https://github.com/specklesystems/speckle_automate-basic_data_sanitiser_demo/actions/workflows/main.yml)
 
-This is a template repository for a Speckle Automate functions written in python
-using the [specklepy](https://pypi.org/project/specklepy/) SDK to interact with Speckle data.
+# Speckle Automate Function: Data Sanitizer
 
-This template contains the full scaffolding required to publish a function to the automate environment.
-Also has some sane defaults for a development environment setups.
+## Overview
+The Speckle Automate Data Sanitizer function is a conceptual demonstration designed for the AEC industry. It showcases the potential of leveraging Speckle's capabilities for automated detection and sanitization of sensitive data within project version commits.
 
-## Getting started
+## ⚠️ Disclaimer: Conceptual Demonstration Only
+**IMPORTANT: This function is a theoretical model and not a functional implementation. It is intended to exhibit the possibilities of data sanitization within Speckle Automate, emphasizing the importance of privacy and data integrity in collaborative environments.**
 
-1. Use this template repository to create a new repository in your own / organization's profile.
+## Value of the Data Sanitizer
+In the realm of AEC project management, handling sensitive data such as private client details, confidential design elements, or proprietary information is a significant challenge. The Data Sanitizer function aims to address these challenges by:
+- **Enhancing Data Privacy:** Automatically filtering out sensitive information from shared project data.
+- **Maintaining Data Integrity:** Ensuring that the cleansing process preserves the usefulness and accuracy of the data.
+- **Streamlining Compliance:** Assisting in adhering to privacy laws and regulations within the AEC industry.
+- **Boosting Collaborative Confidence:** Enhancing trust among project stakeholders through responsible data handling.
 
-Register the function 
+### How It Works
+The function employs Speckle's data traversal capabilities to scrutinize data within a version commit. It uses predefined rules to identify sensitive information and filters it out, sharing only pertinent, non-sensitive data.
 
-### Add new dependencies
+### Key Components
+- **Automated Data Scrubbing:** Detects and sanitizes private data in near real-time.
+- **Customizable Ruleset:** Adaptable to various definitions of sensitive information.
+- **In-Depth Data Processing:** Meticulously processes data to balance privacy with data utility.
 
-To add new python package dependencies to the project, use:
-`$ poetry add pandas`
+### Function Logic
+The main function body includes stages like initial checks, data reception and traversal, rule application, data sanitization, and post-processing to generate sanitized data versions and detailed reports.
 
-### Change launch variables
 
-describe how the launch.json should be edited
 
-### Github Codespaces
+## Using this Speckle Function
 
-Create a new repo from this template, and use the create new code.
+1. **Create a New Speckle Automation**: Navigate to the Speckle dashboard.
 
-### Using this Speckle Function
+2. **Select the Speckle Project & Model**: Choose the relevant project and model.
 
-1. [Create](https://automate.speckle.dev/) a new Speckle Automation.
-1. Select your Speckle Project and Speckle Model.
-1. Select the existing Speckle Function named [`Random comment on IFC beam`](https://automate.speckle.dev/functions/e110be8fad).
-1. Enter a phrase to use in the comment.
-1. Click `Create Automation`.
+3. **Select the Function**: Opt for the function named "Data Validation in AEC."
 
-## Getting Started with creating your own Speckle Function
+4. **Configure & Create**: Adjust settings as needed and click "Create Automation."
 
-1. [Register](https://automate.speckle.dev/) your Function with [Speckle Automate](https://automate.speckle.dev/) and select the Python template.
-1. A new repository will be created in your GitHub account.
-1. Make changes to your Function in `main.py`. See below for the Developer Requirements, and instructions on how to test.
-1. To create a new version of your Function, create a new [GitHub release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository) in your repository.
+## Develop Your Own Speckle Function
 
-## Developer Requirements
+1. **Fork & Clone**: Fork this repository and clone it or use GitHub CodeSpaces.
 
-1. Install the following:
-    - [Python 3](https://www.python.org/downloads/)
-    - [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer)
-1. Run `poetry shell && poetry install` to install the required Python packages.
+2. **Function Registration**: After registration, save the Function Publish Token and ID as GitHub Action Secrets.
 
-## Building and Testing
+3. **Edit**: Make modifications in `main.py`.
 
-The code can be tested locally by running `poetry run pytest`.
+4. **Automatic Versioning**: Every commit to the main branch auto-creates a new version.
 
-### Building and running the Docker Container Image
+## Developer Setup
 
-Running and testing your code on your own machine is a great way to develop your Function; the following instructions are a bit more in-depth and only required if you are having issues with your Function in GitHub Actions or on Speckle Automate.
+- **Requirements**: Install Python 3 and Poetry. Run `poetry shell && poetry install` for required packages.
 
-#### Building the Docker Container Image
-
-Your code is packaged by the GitHub Action into the format required by Speckle Automate. This is done by building a Docker Image, which is then run by Speckle Automate. You can attempt to build the Docker Image yourself to test the building process locally.
-
-To build the Docker Container Image, you will need to have [Docker](https://docs.docker.com/get-docker/) installed.
-
-Once you have Docker running on your local machine:
-
-1. Open a terminal
-1. Navigate to the directory in which you cloned this repository
-1. Run the following command:
-
-    ```bash
-    docker build -f ./Dockerfile -t speckle_automate_python_example .
-    ```
-
-#### Running the Docker Container Image
-
-Once the image has been built by the GitHub Action, it is sent to Speckle Automate. When Speckle Automate runs your Function as part of an Automation, it will run the Docker Container Image. You can test that your Docker Container Image runs correctly by running it locally.
-
-1. To then run the Docker Container Image, run the following command:
-
-    ```bash
-    docker run --rm speckle_automate_python_example \
-    python -u main.py run \
-    '{"projectId": "1234", "modelId": "1234", "branchName": "myBranch", "versionId": "1234", "speckleServerUrl": "https://speckle.xyz", "automationId": "1234", "automationRevisionId": "1234", "automationRunId": "1234", "functionId": "1234", "functionName": "my function", "functionLogo": "base64EncodedPng"}' \
-    '{}' \
-    yourSpeckleServerAuthenticationToken
-    ```
-
-Let's explain this in more detail:
-
-`docker run --rm speckle_automate_python_example` tells Docker to run the Docker Container Image that we built earlier. `speckle_automate_python_example` is the name of the Docker Container Image that we built earlier. The `--rm` flag tells docker to remove the container after it has finished running, this frees up space on your machine.
-
-The line `python -u main.py run` is the command that is run inside the Docker Container Image. The rest of the command is the arguments that are passed to the command. The arguments are:
-
-- `'{"projectId": "1234", "modelId": "1234", "branchName": "myBranch", "versionId": "1234", "speckleServerUrl": "https://speckle.xyz", "automationId": "1234", "automationRevisionId": "1234", "automationRunId": "1234", "functionId": "1234", "functionName": "my function", "functionLogo": "base64EncodedPng"}'` - the metadata that describes the automation and the function.
-- `{}` - the input parameters for the function that the Automation creator is able to set. Here they are blank, but you can add your own parameters to test your function.
-- `yourSpeckleServerAuthenticationToken` - the authentication token for the Speckle Server that the Automation can connect to. This is required to be able to interact with the Speckle Server, for example to get data from the Model.
+- **Building & Testing**: Test locally using `poetry run pytest`. Also, package the code as a Docker Container Image for
+  Speckle Automate.
 
 ## Resources
 
-- [Learn](https://speckle.guide/dev/python.html) more about SpecklePy, and interacting with Speckle from Python.
+- **SpecklePy**: Dive deeper into `SpecklePy` and harness the power of Speckle from Python.
