@@ -1,4 +1,4 @@
-[![build and deploy Speckle functions](https://github.com/specklesystems/speckle_automate-basic_data_sanitiser_demo/actions/workflows/main.yml/badge.svg)](https://github.com/specklesystems/speckle_automate-basic_data_sanitiser_demo/actions/workflows/main.yml)
+[![build and deploy Speckle functions](https://github.com/specklesystems/speckle_automate-data_sanitizer_demo/actions/workflows/main.yml/badge.svg)](https://github.com/specklesystems/speckle_automate-data_sanitizer_demo/actions/workflows/main.yml)
 
 # Speckle Automate Function: Data Sanitizer
 
