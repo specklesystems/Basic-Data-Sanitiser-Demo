@@ -8,6 +8,8 @@ The Speckle Automate Data Sanitizer function is a conceptual demonstration desig
 ## ⚠️ Disclaimer: Conceptual Demonstration Only
 **IMPORTANT: This function is a theoretical model and not a functional implementation. It is intended to exhibit the possibilities of data sanitization within Speckle Automate, emphasizing the importance of privacy and data integrity in collaborative environments.**
 
+<img width="850" alt="image" src="https://github.com/specklesystems/speckle_automate-data_sanitizer_demo/assets/760691/e1bb3aea-66f6-45f2-b938-8eb7c7a9765e">
+
 ## Value of the Data Sanitizer
 In the realm of AEC project management, handling sensitive data such as private client details, confidential design elements, or proprietary information is a significant challenge. The Data Sanitizer function aims to address these challenges by:
 - **Enhancing Data Privacy:** Automatically filtering out sensitive information from shared project data.
