@@ -1,9 +1,9 @@
 """This module contains the business logic of the function.
 
-use the automation_context module to wrap your function in an Autamate context helper
+use the automation_context module to wrap your function in an Automate context helper
 """
-
-import time
+from enum import Enum
+from typing import cast, List, Dict
 
 from pydantic import Field
 from speckle_automate import (
@@ -11,8 +11,25 @@ from speckle_automate import (
     AutomationContext,
     execute_automate_function,
 )
+from specklepy.objects import Base
 
-from Utilities.flatten import flatten_base
+from Rules.actions import PrefixRemovalAction
+from Rules.rules import ParameterRules
+from Rules.traversal import get_data_traversal_rules
+
+
+class SanitizationMode(Enum):
+    PREFIX_MATCHING = "Prefix Matching"
+    PATTERN_MATCHING = "Pattern Matching"
+    ANONYMIZATION = "Anonymization"
+
+
+def create_one_of_enum(enum_cls):
+    """
+    Helper function to create a JSON schema from an Enum class.
+    This is used for generating user input forms in the UI.
+    """
+    return [{"const": item.value, "title": item.name} for item in enum_cls]
 
 
 class FunctionInputs(AutomateBase):
@@ -23,12 +40,50 @@ class FunctionInputs(AutomateBase):
     https://docs.pydantic.dev/latest/usage/models/
     """
 
-    forbidden_speckle_type: str = Field(
-        title="Forbidden speckle type",
+    sanitization_mode: SanitizationMode = Field(
+        default=SanitizationMode.PREFIX_MATCHING,
+        title="Data Sanitization Mode",
+        description="Select the mode of data sanitization: Prefix Matching, Pattern Matching, or Anonymization.",
+        json_schema_extra={
+            "oneOf": create_one_of_enum(SanitizationMode),
+        },
+    )
+
+    forbidden_parameter_prefix: str = Field(
+        title="Parameter Prefix to Cleanse",
         description=(
-            "If a object has the following speckle_type,"
-            " it will be marked with an error."
+            "If a object has a parameter with the following prefix it will be removed from the object."
         ),
+    )
+
+    parameter_patterns: List[str] = Field(
+        default=[],
+        title="Parameter Patterns for Cleansing",
+        description="List of patterns to match parameters that should be cleansed. Use regular expressions for advanced matching.",
+        json_schema_extra={
+            "readOnly": True,
+        },
+    )
+
+    encryption_secret_key: str = Field(
+        title="Encryption Secret Key",
+        description=(
+            "A secret term used for salting and encrypting text and numerical values. "
+            "This ensures data is encrypted and only accessible by the owner of the key."
+        ),
+        min_length=8,  # Example constraint to ensure basic security
+        json_schema_extra={
+            "readOnly": True,
+        },
+    )
+
+    anonymize_emails: bool = Field(
+        default=False,
+        title="Anonymize Email Addresses",
+        description="Enable this option to anonymize email addresses in the dataset.",
+        json_schema_extra={
+            "readOnly": True,
+        },
     )
 
 
@@ -36,65 +91,83 @@ def automate_function(
     automate_context: AutomationContext,
     function_inputs: FunctionInputs,
 ) -> None:
-    """This is an example Speckle Automate function.
+    """
+    Main function for the Speckle Automation.
+
+    This function receives the Speckle data, applies a series of checks
+    and actions on it, and then reports the results.
 
     Args:
-        automate_context: A context helper object, that carries relevant information
-            about the runtime context of this function.
-            It gives access to the Speckle project data, that triggered this run.
-            It also has conveniece methods attach result data to the Speckle model.
-        function_inputs: An instance object matching the defined schema.
+        automate_context: Context with helper methods for Speckle Automate.
+        function_inputs: User-defined inputs for the automation.
     """
-    # the context provides a conveniet way, to receive the triggering version
+    if not function_inputs.forbidden_parameter_prefix:
+        automate_context.mark_run_failed("No prefix has been set.")
+        return
+
     version_root_object = automate_context.receive_version()
 
-    sleep_cycles = 10
-    for i in range(sleep_cycles):
-        print(f"sleeping {i}/{sleep_cycles}")
-        time.sleep(5)
+    # Traverse the received Speckle data.
+    speckle_data = get_data_traversal_rules()
+    traversal_contexts_collection = speckle_data.traverse(version_root_object)
 
-    count = 0
-    for b in flatten_base(version_root_object):
-        if b.speckle_type == function_inputs.forbidden_speckle_type:
-            if not b.id:
-                raise ValueError("Cannot operate on objects without their id's.")
+    # Checking rules
+    is_revit_parameter = ParameterRules.speckle_type_rule(
+        "Objects.BuiltElements.Revit.Parameter"
+    )
+    has_forbidden_prefix = ParameterRules.forbidden_prefix_rule(
+        function_inputs.forbidden_parameter_prefix
+    )
 
-            automate_context.attach_error_to_objects(
-                category="Forbidden speckle_type",
-                object_ids=b.id,
-                message="This project should not contain the type: "
-                f"{b.speckle_type}",
-            )
-            count += 1
+    # Actions
+    removal_action = PrefixRemovalAction(function_inputs.forbidden_parameter_prefix)
 
-    if count > 0:
-        # this is how a run is marked with a failure cause
-        automate_context.mark_run_failed(
-            "Automation failed: "
-            f"Found {count} object that have one of the forbidden speckle types: "
-            f"{function_inputs.forbidden_speckle_type}"
-        )
+    cleansed_objects = set()
 
-        # set the automation context view, to the original model / version view
-        # to show the offending objects
-        automate_context.set_context_view()
+    # Iterate over each context in the traversal contexts collection.
+    # Each context represents an object (or a nested part of an object) within
+    # the data structure that was traversed.
+    # The goal of this loop is to identify and act upon parameters of the objects
+    # that meet certain criteria (e.g., being a Revit parameter with a forbidden prefix).
+    for context in traversal_contexts_collection:
+        current_object = context.current
+        if hasattr(current_object, "parameters"):
+            parameters = cast(Base, current_object.parameters)
 
-    else:
-        automate_context.mark_run_success("No forbidden types found.")
+            if parameters is None:
+                continue
 
-    # if the function generates file results, this is how it can be
-    # attached to the Speckle project / model
-    # automate_context.store_file_result("./report.pdf")
+            for parameter_key in parameters.get_dynamic_member_names():
+                parameter = cast(Base, parameters.__getitem__(f"{parameter_key}"))
 
+                if is_revit_parameter(parameter) and has_forbidden_prefix(parameter):
+                    removal_action.apply(parameter, current_object)
+                    if current_object.id not in cleansed_objects:
+                        cleansed_objects.add(current_object.id)
 
-def automate_function_without_inputs(automate_context: AutomationContext) -> None:
-    """A function example without inputs.
+    # check the affected objects of all actions and count them
+    affected_objects = set()
+    for action in [removal_action]:
+        affected_objects.update(action.affected_parameters)
 
-    If your function does not need any input variables,
-     besides what the automation context provides,
-     the inputs argument can be omitted.
-    """
-    pass
+    if not affected_objects or len(affected_objects) == 0:
+        automate_context.mark_run_success("No parameters were removed.")
+        return
+
+    # Generate reports for all actions.
+    for action in [removal_action]:
+        action.report(automate_context)
+
+    new_version_id = automate_context.create_new_version_in_project(
+        version_root_object, "cleansed", "Cleansed Parameters"
+    )
+
+    if not new_version_id:
+        automate_context.mark_run_failed("Failed to create a new version.")
+        return
+
+    # Final summary.
+    automate_context.mark_run_success("Actions applied and reports generated.")
 
 
 # make sure to call the function with the executor
