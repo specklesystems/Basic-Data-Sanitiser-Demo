@@ -56,10 +56,10 @@ class FunctionInputs(AutomateBase):
         ),
     )
 
-    parameter_patterns: List[str] = Field(
+    parameter_patterns: str = Field(
         default=[],
         title="Parameter Patterns for Cleansing",
-        description="List of patterns to match parameters that should be cleansed. Use regular expressions for advanced matching.",
+        description="Comma separated list of patterns to match parameters that should be cleansed. Use regular expressions for advanced matching.",
         json_schema_extra={
             "readOnly": True,
         },
