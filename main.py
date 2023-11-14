@@ -57,7 +57,7 @@ class FunctionInputs(AutomateBase):
     )
 
     parameter_patterns: str = Field(
-        default=[],
+        default="",
         title="Parameter Patterns for Cleansing",
         description="Comma separated list of patterns to match parameters that should be cleansed. Use regular expressions for advanced matching.",
         json_schema_extra={
@@ -66,6 +66,7 @@ class FunctionInputs(AutomateBase):
     )
 
     encryption_secret_key: str = Field(
+        default="SECRET_KEY",
         title="Encryption Secret Key",
         description=(
             "A secret term used for salting and encrypting text and numerical values. "
@@ -81,9 +82,7 @@ class FunctionInputs(AutomateBase):
         default=False,
         title="Anonymize Email Addresses",
         description="Enable this option to anonymize email addresses in the dataset.",
-        json_schema_extra={
-            "readOnly": True,
-        },
+
     )
 
 
