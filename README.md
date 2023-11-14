@@ -20,6 +20,8 @@ In the realm of AEC project management, handling sensitive data such as private 
 ### How It Works
 The function employs Speckle's data traversal capabilities to scrutinize data within a version commit. It uses predefined rules to identify sensitive information and filters it out, sharing only pertinent, non-sensitive data.
 
+<img width="580" alt="image" src="https://github.com/specklesystems/speckle_automate-data_sanitizer_demo/assets/760691/42b3ce4f-4fd7-4f34-97ed-81c17273ddd0">
+
 ### Key Components
 - **Automated Data Scrubbing:** Detects and sanitizes private data in near real-time.
 - **Customizable Ruleset:** Adaptable to various definitions of sensitive information.
